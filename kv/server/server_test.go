@@ -68,6 +68,7 @@ func TestRawGet1(t *testing.T) {
 }
 
 func TestRawGetNotFound1(t *testing.T) {
+	// 查询一个不存在的 key 时，RawGet 应该把"没找到"当作正常结果返回，而不是当作错误
 	conf := config.NewTestConfig()
 	s := standalone_storage.NewStandAloneStorage(conf)
 	s.Start()
@@ -81,7 +82,7 @@ func TestRawGetNotFound1(t *testing.T) {
 		Cf:  cf,
 	}
 	resp, err := server.RawGet(nil, req)
-	assert.Nil(t, err)
+	assert.Nil(t, err) // 判断 err == nil
 	assert.True(t, resp.NotFound)
 }
 
@@ -197,7 +198,7 @@ func TestRawDelete1(t *testing.T) {
 	assert.Nil(t, err)
 
 	val, err := Get(s, cf, []byte{99})
-	assert.Equal(t, nil, err)
+	assert.Equal(t, nil, err) // err
 	assert.Equal(t, []byte(nil), val)
 }
 

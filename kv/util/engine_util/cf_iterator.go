@@ -4,9 +4,12 @@ import (
 	"github.com/Connor1996/badger"
 )
 
+// 把 Badger 的迭代器包装成支持列族（CF）的迭代器，让上层按照业务 key 遍历数据。
+
+// 隐藏 Key 的 CF 前缀
 type CFItem struct {
 	item      *badger.Item
-	prefixLen int
+	prefixLen int // CF 前缀的字节长度
 }
 
 // String returns a string representation of Item
@@ -54,11 +57,13 @@ func (i *CFItem) UserMeta() []byte {
 	return i.item.UserMeta()
 }
 
+// 包装遍历行为
 type BadgerIterator struct {
 	iter   *badger.Iterator
 	prefix string
 }
 
+// 接收 CF 名称和一个已有的 badger.Txn，在该事务上创建迭代器
 func NewCFIterator(cf string, txn *badger.Txn) *BadgerIterator {
 	return &BadgerIterator{
 		iter:   txn.NewIterator(badger.DefaultIteratorOptions),
@@ -95,6 +100,8 @@ func (it *BadgerIterator) Rewind() {
 	it.iter.Rewind()
 }
 
+// 定义上层需要的能力.
+// 如何遍历
 type DBIterator interface {
 	// Item returns pointer to the current key-value pair.
 	Item() DBItem
@@ -111,6 +118,7 @@ type DBIterator interface {
 	Close()
 }
 
+// 如何读取当前数据项
 type DBItem interface {
 	// Key returns the key.
 	Key() []byte

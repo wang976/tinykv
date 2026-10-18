@@ -26,6 +26,7 @@ type Server struct {
 	copHandler *coprocessor.CopHandler
 }
 
+// 创建一个业务对象, 并将刚才的 storage 保存到对象内部.
 func NewServer(storage storage.Storage) *Server {
 	return &Server{
 		storage: storage,
