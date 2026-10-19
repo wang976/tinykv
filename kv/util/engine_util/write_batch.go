@@ -71,14 +71,17 @@ func (wb *WriteBatch) RollbackToSafePoint() {
 	wb.size = wb.safePointSize
 }
 
+// 把 WriteBatch 里攒下的所有修改，作为一次 badger 事务原子地写入数据库.
 func (wb *WriteBatch) WriteToDB(db *badger.DB) error {
 	if len(wb.entries) > 0 {
 		err := db.Update(func(txn *badger.Txn) error {
 			for _, entry := range wb.entries {
 				var err1 error
 				if len(entry.Value) == 0 {
+					// 写入一个删除标记.  问题: 空值 -> 删除标记. 但 val 本意也可能为空.
 					err1 = txn.Delete(entry.Key)
 				} else {
+					// 写入一个键值对
 					err1 = txn.SetEntry(entry)
 				}
 				if err1 != nil {

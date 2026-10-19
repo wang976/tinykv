@@ -97,8 +97,15 @@ func (s *StandAloneStorage) Write(ctx *kvrpcpb.Context, batch []storage.Modify) 
 		// 先使用 util.go 处理, 有 DeleteCF.  要判断 CF 类型.
 
 		// 还是用 write_batch 吧
-		wb.SetCF(cf, key, val)
+		switch m.Data.(type) {
+		case storage.Put:
+			wb.SetCF(cf, key, val)
+		case storage.Delete:
+			wb.DeleteCF(cf, key)
+		}
 	}
+
+	// 原有 WriteToDB 不能区分 put key "" 情形, 需自行实现.
 
 	return wb.WriteToDB(s.engine.Kv)
 }

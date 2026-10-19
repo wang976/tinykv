@@ -102,12 +102,13 @@ func (server *Server) RawScan(_ context.Context, req *kvrpcpb.RawScanRequest) (*
 	iter.Seek(req.StartKey)
 
 	// 这里分配的是指针切片, 默认值是 nil
-	kv := make([]*kvrpcpb.KvPair, req.Limit)
+	// kv := make([]*kvrpcpb.KvPair, req.Limit)
+	var kvs []*kvrpcpb.KvPair
 
 	// 需要分配内存
-	for i := range kv {
-		kv[i] = &kvrpcpb.KvPair{}
-	}
+	// for i := range kv {
+	// 	kv[i] = &kvrpcpb.KvPair{}
+	// }
 
 	sum := 0
 	for iter.Valid() {
@@ -118,20 +119,26 @@ func (server *Server) RawScan(_ context.Context, req *kvrpcpb.RawScanRequest) (*
 
 		item := iter.Item()
 
-		kv[sum].Key = item.KeyCopy(nil)
+		var kv kvrpcpb.KvPair
+
+		key := item.KeyCopy(nil)
 		val, err := item.ValueCopy(nil)
 		if err != nil {
 			return nil, err
 		}
-		kv[sum].Value = val
+
+		kv.Key = key
+		kv.Value = val
+
+		// 构造
+		kvs = append(kvs, &kv)
 
 		sum++
-
 		iter.Next()
 	}
 
 	res := &kvrpcpb.RawScanResponse{
-		Kvs: kv[:sum],
+		Kvs: kvs,
 	}
 
 	return res, nil
